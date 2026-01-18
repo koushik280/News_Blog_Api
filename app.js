@@ -13,10 +13,14 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5713",
-    Credential: true,
+    origin: [
+      "http://localhost:5173", // Vite
+       // Production frontend
+    ],
+    credentials: true, //MUST be plural
   }),
 );
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes);
 app.use("/api/news", newsRoutes);
