@@ -77,28 +77,24 @@ const router = express.Router();
 
 router.get("/", getNews);
 
-
 /**
  * @swagger
  * /api/news/filter:
  *   post:
  *     summary: Get news using filters and pagination (payload-based)
  *     description: |
- *       This endpoint allows fetching news using request **payload** instead of query parameters.
- *       It is useful when frontend needs to send pagination, category, or filters in the request body.
+ *       Fetch news using request body filters.
+ *       All fields are optional. Send only what you need.
  *
- *       🔹 Supported features:
- *       - Get all news
- *       - Filter by category
- *       - Fetch single news by id or slug
- *       - Optional pagination
+ *       ⚠️ Important:
+ *       - `id` must be a valid MongoDB ObjectId
+ *       - Do NOT send random strings like "string"
  *
- *       📌 Examples:
- *       - All news: `{ }`
- *       - Category only: `{ "category": "sports" }`
- *       - Pagination: `{ "page": 1, "limit": 5 }`
- *       - Category + pagination:
- *         `{ "category": "sports", "page": 1, "limit": 5 }`
+ *       📌 Common use cases:
+ *       - All news → `{ }`
+ *       - Category only → `{ "category": "sports" }`
+ *       - Pagination → `{ "page": 1, "limit": 5 }`
+ *       - Category + pagination → `{ "category": "sports", "page": 1, "limit": 5 }`
  *
  *     tags: [News]
  *     requestBody:
@@ -110,21 +106,28 @@ router.get("/", getNews);
  *             properties:
  *               id:
  *                 type: string
+ *                 example: 65a9f2c3e8d9f10293ab4567
  *                 description: MongoDB ObjectId (fetch single news)
+ *
  *               slug:
  *                 type: string
+ *                 example: india-clinches-historic-test-victory
  *                 description: SEO-friendly slug (fetch single news)
+ *
  *               category:
  *                 type: string
  *                 enum: [sports, technology, business, politics, health]
+ *                 example: sports
  *                 description: Filter news by category
+ *
  *               page:
  *                 type: integer
  *                 example: 1
- *                 description: Page number for pagination (optional)
+ *                 description: Page number (optional)
+ *
  *               limit:
  *                 type: integer
- *                 example: 10
+ *                 example: 5
  *                 description: Number of results per page (optional)
  *
  *     responses:
@@ -145,17 +148,23 @@ router.get("/", getNews);
  *                   properties:
  *                     page:
  *                       type: integer
+ *                       example: 1
  *                     limit:
  *                       type: integer
+ *                       example: 5
  *                     totalPages:
  *                       type: integer
+ *                       example: 3
  *                     totalResults:
  *                       type: integer
+ *                       example: 13
+ *       400:
+ *         description: Invalid request (e.g. invalid ObjectId)
  *       404:
  *         description: News not found
  */
-router.post("/filter", getNewsByBody);
 
+router.post("/filter", getNewsByBody);
 
 /* Protected */
 /* PROTECTED + AUTHORIZED */

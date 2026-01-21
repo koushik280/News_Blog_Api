@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import generateSlug from "../helper/slugyfi.js";
 import News from "../model/News.js";
 
@@ -67,7 +68,15 @@ export const getNewsByBody = async (req, res) => {
   const { id, slug, category, page, limit } = req.body;
 
   const query = { isPublished: true };
-  if (id) query._id = id;
+  // ✅ Validate ObjectId
+  if (id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid news id",
+      });
+    }
+    query._id = id;
+  }
   if (slug) query.slug = slug;
   if (category) query.category = category;
 
@@ -198,7 +207,6 @@ export const updateNews = async (req, res) => {
     data: news,
   });
 };
-
 
 export const deleteNews = async (req, res) => {
   const { id } = req.params;

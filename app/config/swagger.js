@@ -51,7 +51,10 @@ REST API for News Blog Application.
           type: "object",
           properties: {
             _id: { type: "string", example: "64fd123abc" },
-            title: { type: "string", example: "India Wins Historic Test Match" },
+            title: {
+              type: "string",
+              example: "India Wins Historic Test Match",
+            },
             slug: {
               type: "string",
               example: "india-wins-historic-test-match",
@@ -72,8 +75,7 @@ REST API for News Blog Application.
               properties: {
                 url: {
                   type: "string",
-                  example:
-                    "https://res.cloudinary.com/demo/image.jpg",
+                  example: "https://res.cloudinary.com/demo/image.jpg",
                 },
               },
             },
