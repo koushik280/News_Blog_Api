@@ -141,6 +141,7 @@ export const createNews = async (req, res) => {
       url: req.file.path,
       public_id: req.file.filename,
     };
+    await news.save();
   }
 
   res.status(201).json({
