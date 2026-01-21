@@ -5,60 +5,64 @@ import News from "../model/News.js";
  * Public: Read news (all / single / category / pagination)
  */
 export const getNews = async (req, res) => {
-  const { id, slug, category, page = 1, limit = 10 } = req.query;
+  const { id, slug, category, page, limit } = req.query;
 
-  //Base query: only published news
-  const query = {
-    isPublished: true,
-  };
+  // Base query: only published news
+  const query = { isPublished: true };
 
-  //Single news by ID
+  // Single news by ID
   if (id) {
     query._id = id;
   }
 
-  //Single news by slug
+  // Single news by slug
   if (slug) {
     query.slug = slug;
   }
 
-  //Category filter
+  // Category filter
   if (category) {
     query.category = category;
   }
 
-  // Pagination calculation
-  const pageNumber = parseInt(page, 10);
-  const pageLimit = parseInt(limit, 10);
-  const skip = (pageNumber - 1) * pageLimit;
+  // Check if pagination is requested
+  const isPaginationRequested = page || limit;
 
-  //Count total documents (for pagination info)
-  const totalResults = await News.countDocuments(query);
+  let newsQuery = News.find(query).sort({ publishedAt: -1 });
 
-  // Fetch news
-  const news = await News.find(query)
-    .sort({ publishedAt: -1 }) // latest first
-    .skip(skip)
-    .limit(pageLimit);
+  let pagination = null;
 
-  //If single news requested but not found
-  if ((id || slug) && news.length === 0) {
-    return res.status(404).json({
-      message: "News not found",
-    });
-  }
+  if (isPaginationRequested) {
+    const pageNumber = parseInt(page || 1, 10);
+    const pageLimit = parseInt(limit || 10, 10);
+    const skip = (pageNumber - 1) * pageLimit;
 
-  //Final response
-  res.status(200).json({
-    data: news,
-    pagination: {
+    const totalResults = await News.countDocuments(query);
+
+    newsQuery = newsQuery.skip(skip).limit(pageLimit);
+
+    pagination = {
       page: pageNumber,
       limit: pageLimit,
       totalPages: Math.ceil(totalResults / pageLimit),
       totalResults,
-    },
+    };
+  }
+
+  const news = await newsQuery;
+
+  // If single news requested but not found
+  if ((id || slug) && news.length === 0) {
+    return res.status(404).json({ message: "News not found" });
+  }
+
+  // Final response
+  res.status(200).json({
+    data: news,
+    ...(pagination && { pagination }),
   });
 };
+
 
 export const createNews = async (req, res) => {
   const { title, content, category, isPublished } = req.body;

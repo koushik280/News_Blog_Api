@@ -70,7 +70,70 @@ const router = express.Router();
  *         description: News fetched successfully
  *       404:
  *         description: News not found
+ *//**
+ * @swagger
+ * /api/news:
+ *   get:
+ *     summary: Get news (all, single, category, pagination)
+ *     description: |
+ *       This single endpoint handles multiple use cases:
+ *
+ *       🔹 Get all news  
+ *       🔹 Get single news by **id**  
+ *       🔹 Get single news by **slug**  
+ *       🔹 Filter news by **category**  
+ *       🔹 Optional pagination
+ *
+ *       📌 Examples:
+ *       - All news: `/api/news`
+ *       - Single by ID: `/api/news?id=NEWS_ID`
+ *       - Single by slug: `/api/news?slug=news-slug`
+ *       - Category only: `/api/news?category=sports`
+ *       - Category + pagination: `/api/news?category=sports&page=1&limit=5`
+ *       - Pagination only: `/api/news?page=1&limit=10`
+ *
+ *     tags: [News]
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: string
+ *         description: MongoDB ObjectId (fetch single news)
+ *
+ *       - in: query
+ *         name: slug
+ *         schema:
+ *           type: string
+ *         description: SEO-friendly slug (fetch single news)
+ *
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [sports, technology, business, politics, health]
+ *         description: Filter news by category
+ *
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: Page number (optional)
+ *
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *         description: Number of results per page (optional)
+ *
+ *     responses:
+ *       200:
+ *         description: News fetched successfully
+ *       404:
+ *         description: News not found
  */
+
 
 router.get("/", getNews);
 
