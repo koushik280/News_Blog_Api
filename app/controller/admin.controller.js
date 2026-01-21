@@ -40,39 +40,110 @@ export const updateUserRole = async (req, res) => {
 };
 
 export const listUsers = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const role = req.query.role;
+  const { page, limit, role } = req.query;
 
-  const skip = (page - 1) * limit;
-
-  // role filter
+  // Role filter
   const filter = {};
   if (role) {
     filter.role = role;
   }
 
-  const [users, total] = await Promise.all([
-    User.find(filter)
-      .select("-password") //never expose password
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 }),
+  // Check if pagination is requested
+  const isPaginationRequested = page || limit;
 
-    User.countDocuments(filter),
-  ]);
+  let userQuery = User.find(filter)
+    .select("-password")
+    .sort({ createdAt: -1 });
+
+  let pagination = null;
+
+  if (isPaginationRequested) {
+    const pageNumber = parseInt(page || 1, 10);
+    const pageLimit = parseInt(limit || 10, 10);
+    const skip = (pageNumber - 1) * pageLimit;
+
+    const total = await User.countDocuments(filter);
+
+    userQuery = userQuery.skip(skip).limit(pageLimit);
+
+    pagination = {
+      total,
+      page: pageNumber,
+      limit: pageLimit,
+      totalPages: Math.ceil(total / pageLimit),
+    };
+  }
+
+  const users = await userQuery;
 
   res.status(200).json({
     message: "Users fetched successfully",
-    pagination: {
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    },
     data: users,
+    ...(pagination && { pagination }),
   });
 };
+
+
+export const filterUsersByBody = async (req, res) => {
+  try {
+    const { page, limit, role, search } = req.body;
+
+    const filter = {};
+
+    // Role filter
+    if (role) {
+      filter.role = role;
+    }
+
+    // Search by name or email
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const isPaginationRequested = page || limit;
+
+    let userQuery = User.find(filter)
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    let pagination = null;
+
+    if (isPaginationRequested) {
+      const pageNumber = parseInt(page || 1, 10);
+      const pageLimit = parseInt(limit || 10, 10);
+      const skip = (pageNumber - 1) * pageLimit;
+
+      const total = await User.countDocuments(filter);
+
+      userQuery = userQuery.skip(skip).limit(pageLimit);
+
+      pagination = {
+        total,
+        page: pageNumber,
+        limit: pageLimit,
+        totalPages: Math.ceil(total / pageLimit),
+      };
+    }
+
+    const users = await userQuery;
+
+    res.status(200).json({
+      message: "Users fetched successfully",
+      data: users,
+      ...(pagination && { pagination }),
+    });
+  } catch (error) {
+    console.error("POST /api/admin/users/filter error:", error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+
 
 /**
  * Admin: Delete user with cascade delete (news + images)

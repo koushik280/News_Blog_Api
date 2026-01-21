@@ -6,6 +6,7 @@ import {
   deleteUser,
   disableUser,
   enableUser,
+  filterUsersByBody,
 } from "../controller/admin.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
@@ -91,9 +92,7 @@ router.patch(
  * /api/admin/users:
  *   get:
  *     summary: List users (Admin only)
- *     description: >
- *       Returns a paginated list of users.
- *       Admin can optionally filter users by role.
+ *     description: Returns a list of users. Pagination is optional and applied only if page or limit is provided. Admin can optionally filter users by role.
  *     tags: [Admin]
  *     security:
  *       - cookieAuth: []
@@ -156,6 +155,63 @@ router.patch(
  *         description: Forbidden (admin access required)
  */
 router.get("/users", authenticate, authorizeRoles("admin"), listUsers);
+
+/**
+ * @swagger
+ * /api/admin/users/filter:
+ *   post:
+ *     summary: Filter and search users (Admin only)
+ *     description: |
+ *       Fetch users using request body filters.
+ *       Supports role filtering, search by name/email, and optional pagination.
+ *
+ *       🔹 Examples:
+ *       - All users → `{ }`
+ *       - Role filter → `{ "role": "editor" }`
+ *       - Search → `{ "search": "rahul" }`
+ *       - Pagination → `{ "page": 1, "limit": 10 }`
+ *       - Role + search + pagination →
+ *         `{ "role": "editor", "search": "rahul", "page": 1, "limit": 5 }`
+ *
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [user, editor, admin]
+ *                 example: editor
+ *               search:
+ *                 type: string
+ *                 example: rahul
+ *                 description: Search by name or email
+ *               page:
+ *                 type: integer
+ *                 example: 1
+ *               limit:
+ *                 type: integer
+ *                 example: 10
+ *     responses:
+ *       200:
+ *         description: Users fetched successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (Admin only)
+ */
+
+router.post(
+  "/users/filter",
+  authenticate,
+  authorizeRoles("admin"),
+  filterUsersByBody,
+);
 
 /**
  * Admin-only: Delete user
