@@ -20,19 +20,20 @@ REST API for News Blog Application.
 
 🔑 Authentication:
 - JWT-based
-- Stored in **HTTP-only cookies**
-- Frontend must send requests with \`credentials: "include"\`
+- Stored in HTTP-only cookies
+- Frontend must send requests with credentials: "include"
       `,
     },
 
+    // ✅ IMPORTANT: Production first
     servers: [
-      {
-        url: "http://localhost:5000",
-        description: "Local development server",
-      },
       {
         url: "https://news-blog-api.onrender.com",
         description: "Production (Render)",
+      },
+      {
+        url: "http://localhost:5000",
+        description: "Local development server",
       },
     ],
 
@@ -50,11 +51,11 @@ REST API for News Blog Application.
           type: "object",
           properties: {
             _id: { type: "string", example: "64fd123abc" },
-            title: {
+            title: { type: "string", example: "India Wins Historic Test Match" },
+            slug: {
               type: "string",
-              example: "India Wins Historic Test Match",
+              example: "india-wins-historic-test-match",
             },
-            slug: { type: "string", example: "india-wins-historic-test-match" },
             content: {
               type: "string",
               example:
@@ -71,12 +72,16 @@ REST API for News Blog Application.
               properties: {
                 url: {
                   type: "string",
-                  example: "https://res.cloudinary.com/demo/image.jpg",
+                  example:
+                    "https://res.cloudinary.com/demo/image.jpg",
                 },
               },
             },
             author: { type: "string", example: "64fduser123" },
-            createdAt: { type: "string", example: "2024-01-01T10:00:00Z" },
+            createdAt: {
+              type: "string",
+              example: "2024-01-01T10:00:00Z",
+            },
           },
         },
 
@@ -102,5 +107,4 @@ REST API for News Blog Application.
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
-
 export default swaggerSpec;
