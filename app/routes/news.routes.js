@@ -15,25 +15,63 @@ const router = express.Router();
  * /api/news:
  *   get:
  *     summary: Get news (all, single, category, pagination)
+ *     description: |
+ *       This single endpoint handles multiple use cases:
+ *       - All news
+ *       - Single news by **id**
+ *       - Single news by **slug**
+ *       - Filter by category
+ *       - Pagination
+ *
+ *       **Examples:**
+ *       - All news: `/api/news`
+ *       - Single by ID: `/api/news?id=NEWS_ID`
+ *       - Single by slug: `/api/news?slug=news-slug`
+ *       - Category: `/api/news?category=sports`
+ *       - Pagination: `/api/news?page=1&limit=10`
+ *
  *     tags: [News]
  *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: string
+ *         description: MongoDB ObjectId of the news (for single news)
+ *
+ *       - in: query
+ *         name: slug
+ *         schema:
+ *           type: string
+ *         description: Slug of the news (SEO friendly)
+ *
  *       - in: query
  *         name: category
  *         schema:
  *           type: string
+ *           enum: [sports, technology, business, politics, health]
+ *         description: Filter news by category
+ *
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
+ *           example: 1
+ *         description: Page number for pagination
+ *
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
+ *           example: 10
+ *         description: Number of results per page
+ *
  *     responses:
  *       200:
  *         description: News fetched successfully
+ *       404:
+ *         description: News not found
  */
-/* Public */
+
 router.get("/", getNews);
 
 /* Protected */
