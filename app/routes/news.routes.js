@@ -75,6 +75,9 @@ const router = express.Router();
  *         description: News not found
  */
 
+router.get("/", getNews);
+
+
 /**
  * @swagger
  * /api/news/filter:
@@ -151,11 +154,6 @@ const router = express.Router();
  *       404:
  *         description: News not found
  */
-
-router.get("/", getNews);
-
-
-
 router.post("/filter", getNewsByBody);
 
 
