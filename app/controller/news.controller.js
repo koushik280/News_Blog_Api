@@ -63,6 +63,40 @@ export const getNews = async (req, res) => {
   });
 };
 
+export const getNewsByBody = async (req, res) => {
+  const { id, slug, category, page, limit } = req.body;
+
+  const query = { isPublished: true };
+  if (id) query._id = id;
+  if (slug) query.slug = slug;
+  if (category) query.category = category;
+
+  let newsQuery = News.find(query).sort({ publishedAt: -1 });
+  let pagination = null;
+
+  if (page || limit) {
+    const pageNumber = parseInt(page || 1, 10);
+    const pageLimit = parseInt(limit || 10, 10);
+    const skip = (pageNumber - 1) * pageLimit;
+
+    const totalResults = await News.countDocuments(query);
+    newsQuery = newsQuery.skip(skip).limit(pageLimit);
+
+    pagination = {
+      page: pageNumber,
+      limit: pageLimit,
+      totalResults,
+      totalPages: Math.ceil(totalResults / pageLimit),
+    };
+  }
+
+  const news = await newsQuery;
+
+  res.status(200).json({
+    data: news,
+    ...(pagination && { pagination }),
+  });
+};
 
 export const createNews = async (req, res) => {
   const { title, content, category, isPublished } = req.body;
