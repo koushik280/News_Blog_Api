@@ -31,8 +31,8 @@ REST API for News Blog Application.
         description: "Local development server",
       },
       {
-        url: "https://your-render-app.onrender.com",
-        description: "Production server",
+        url: "https://news-blog-api.onrender.com",
+        description: "Production (Render)",
       },
     ],
 
@@ -50,7 +50,10 @@ REST API for News Blog Application.
           type: "object",
           properties: {
             _id: { type: "string", example: "64fd123abc" },
-            title: { type: "string", example: "India Wins Historic Test Match" },
+            title: {
+              type: "string",
+              example: "India Wins Historic Test Match",
+            },
             slug: { type: "string", example: "india-wins-historic-test-match" },
             content: {
               type: "string",
