@@ -172,10 +172,25 @@ router.post("/filter", getNewsByBody);
  * @swagger
  * /api/news:
  *   post:
- *     summary: Create a news article with image
+ *     summary: Create a news article (with optional image)
+ *     description: |
+ *       Creates a new news article.
+ *       Only users with **Editor** or **Admin** role are allowed.
+ *
+ *       🔐 Authentication:
+ *       - Supports BOTH:
+ *         • HTTP-only cookie (accessToken)
+ *         • Authorization header (Bearer token)
+ *
+ *       📌 Notes:
+ *       - Image upload is optional
+ *       - If `isPublished` is true, `publishedAt` is set automatically
+ *
  *     tags: [News]
  *     security:
  *       - cookieAuth: []
+ *       - bearerAuth: []
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -189,27 +204,51 @@ router.post("/filter", getNewsByBody);
  *             properties:
  *               title:
  *                 type: string
- *                 example: India wins series
+ *                 example: Artificial Intelligence Is Transforming Software
  *               content:
  *                 type: string
- *                 example: India won the series in a thrilling match.
+ *                 example: AI is changing how modern software is built and deployed.
  *               category:
  *                 type: string
- *                 enum: [politics, sports, technology, business, health, entertainment]
+ *                 enum:
+ *                   - politics
+ *                   - sports
+ *                   - technology
+ *                   - business
+ *                   - health
+ *                   - entertainment
+ *                 example: technology
  *               isPublished:
  *                 type: boolean
  *                 example: true
  *               image:
  *                 type: string
  *                 format: binary
+ *
  *     responses:
  *       201:
  *         description: News created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: News created successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/News'
+ *
+ *       400:
+ *         description: Validation error (missing required fields)
+ *
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized (token missing or invalid)
+ *
  *       403:
- *         description: Forbidden
+ *         description: Forbidden (Editor or Admin access required)
  */
+
 
 router.post(
   "/",
