@@ -11,13 +11,25 @@ import adminRoutes from "./app/routes/admin.route.js";
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+const allowedOrigins = [
+  "http://localhost:3000", // React
+  "http://localhost:5173", // Vite
+  "https://news-blog-api.onrender.com", // Swagger / same domain safe
+  // add your deployed frontend later:
+  // "https://your-frontend.vercel.app"
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173", // Vite
-       // Production frontend
-    ],
-    credentials: true, //MUST be plural
+    origin: function (origin, callback) {
+      // allow REST tools & same-origin
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed for this origin"));
+      }
+    },
+    credentials: true,
   }),
 );
 
