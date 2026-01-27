@@ -7,6 +7,8 @@ import {
   disableUser,
   enableUser,
   filterUsersByBody,
+  adminGetAllNews,
+  togglePublishStatus,
 } from "../controller/admin.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
@@ -333,6 +335,148 @@ router.patch(
   authenticate,
   authorizeRoles("admin"),
   enableUser,
+);
+
+/**
+ * @swagger
+ * /api/admin/news:
+ *   get:
+ *     summary: Admin - Get all news (published and unpublished)
+ *     description: |
+ *       Returns all news articles including drafts.
+ *       Supports filtering by category, publish status, and pagination.
+ *
+ *       🔐 Admin only.
+ *
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [politics, sports, technology, business, health, entertainment]
+ *         description: Filter by category
+ *
+ *       - in: query
+ *         name: isPublished
+ *         schema:
+ *           type: boolean
+ *         description: true = published, false = drafts
+ *
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *
+ *     responses:
+ *       200:
+ *         description: News list returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/News'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     totalResults:
+ *                       type: integer
+ *
+ *       401:
+ *         description: Unauthorized
+ *
+ *       403:
+ *         description: Forbidden (Admin only)
+ */
+
+router.get("/news", authenticate, authorizeRoles("admin"), adminGetAllNews);
+
+/**
+ * @swagger
+ * /api/admin/news/{id}/publish:
+ *   patch:
+ *     summary: Admin - Publish or unpublish a news article
+ *     description: |
+ *       Updates publish status of a news article.
+ *
+ *       🔐 Admin only.
+ *
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: News ID
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isPublished
+ *             properties:
+ *               isPublished:
+ *                 type: boolean
+ *                 example: true
+ *
+ *     responses:
+ *       200:
+ *         description: Publish status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: News published successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/News'
+ *
+ *       401:
+ *         description: Unauthorized
+ *
+ *       403:
+ *         description: Forbidden (Admin only)
+ *
+ *       404:
+ *         description: News not found
+ */
+
+router.patch(
+  "/news/:id/publish",
+  authenticate,
+  authorizeRoles("admin"),
+  togglePublishStatus,
 );
 
 export default router;

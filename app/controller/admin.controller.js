@@ -1,5 +1,5 @@
 import User from "../model/User.js";
-import News from "../model/News.js"
+import News from "../model/News.js";
 
 export const updateUserRole = async (req, res) => {
   const { id } = req.params;
@@ -51,9 +51,7 @@ export const listUsers = async (req, res) => {
   // Check if pagination is requested
   const isPaginationRequested = page || limit;
 
-  let userQuery = User.find(filter)
-    .select("-password")
-    .sort({ createdAt: -1 });
+  let userQuery = User.find(filter).select("-password").sort({ createdAt: -1 });
 
   let pagination = null;
 
@@ -82,7 +80,6 @@ export const listUsers = async (req, res) => {
     ...(pagination && { pagination }),
   });
 };
-
 
 export const filterUsersByBody = async (req, res) => {
   try {
@@ -142,8 +139,6 @@ export const filterUsersByBody = async (req, res) => {
     });
   }
 };
-
-
 
 /**
  * Admin: Delete user with cascade delete (news + images)
@@ -275,3 +270,76 @@ export const enableUser = async (req, res) => {
     },
   });
 };
+
+//Admin can get all the news data published and not published as well
+export const adminGetAllNews = async (req, res) => {
+  const { category, page, limit, isPublished } = req.query;
+
+  const query = {};
+
+  // Optional filters
+  if (category) query.category = category;
+
+  if (typeof isPublished !== "undefined") {
+    query.isPublished = isPublished === "true";
+  }
+
+  let newsQuery = News.find(query).sort({ createdAt: -1 });
+
+  let pagination = null;
+
+  if (page || limit) {
+    const pageNumber = parseInt(page || 1, 10);
+    const pageLimit = parseInt(limit || 10, 10);
+    const skip = (pageNumber - 1) * pageLimit;
+
+    const totalResults = await News.countDocuments(query);
+
+    newsQuery = newsQuery.skip(skip).limit(pageLimit);
+
+    pagination = {
+      page: pageNumber,
+      limit: pageLimit,
+      totalPages: Math.ceil(totalResults / pageLimit),
+      totalResults,
+    };
+  }
+
+  const news = await newsQuery;
+
+  res.status(200).json({
+    data: news,
+    ...(pagination && { pagination }),
+  });
+};
+
+
+export const togglePublishStatus = async (req, res) => {
+  const { id } = req.params;
+  const { isPublished } = req.body;
+
+  const news = await News.findById(id);
+
+  if (!news) {
+    return res.status(404).json({
+      message: "News not found",
+    });
+  }
+
+  // Convert to boolean
+  const publishValue = isPublished === true || isPublished === "true";
+
+  news.isPublished = publishValue;
+  news.publishedAt = publishValue ? new Date() : null;
+
+  await news.save();
+
+  res.status(200).json({
+    message: publishValue
+      ? "News published successfully"
+      : "News unpublished successfully",
+    data: news,
+  });
+};
+
+
