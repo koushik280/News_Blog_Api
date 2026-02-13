@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import generateSlug from "../helper/slugyfi.js";
 import News from "../model/News.js";
+import cloudinary from "../config/cloudinary.js";
 
 /**
  * Public: Read news (all / single / category / pagination)
