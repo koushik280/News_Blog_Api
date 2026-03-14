@@ -154,7 +154,7 @@ export const loginWithRefresh = async (req, res) => {
  * Refresh access token
  */
 export const refreshAccessToken = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
+  const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
   if (!refreshToken) {
     return res.status(401).json({ message: "Refresh token missing" });

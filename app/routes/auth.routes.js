@@ -4,7 +4,7 @@ import {
   login,
   loginWithRefresh,
   refreshAccessToken,
-  logout
+  logout,
 } from "../controller/auth.controller.js";
 
 const router = express.Router();
@@ -107,10 +107,21 @@ router.post("/login-with-refresh", loginWithRefresh);
  * @swagger
  * /api/auth/refresh:
  *   post:
- *     summary: Refresh access token using refresh token cookie
+ *     summary: Refresh access token using refresh token (cookie or body)
  *     tags: [Auth]
  *     security:
  *       - cookieAuth: []
+ *     requestBody:
+ *       description: Optional — send refreshToken in body if not using cookies
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *     responses:
  *       200:
  *         description: Access token refreshed successfully
@@ -129,7 +140,7 @@ router.post("/refresh", refreshAccessToken);
  *       200:
  *         description: Logged out successfully
  */
- 
+
 router.post("/logout", logout);
 
 export default router;
