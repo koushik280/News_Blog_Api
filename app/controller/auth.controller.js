@@ -18,172 +18,194 @@ const cookieOptions = {
  * Register new user
  */
 export const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Error in register:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    return res.status(409).json({ message: "User already exists" });
-  }
-
-  const hashedPassword = await hashPassword(password);
-
-  const user = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-  });
-
-  res.status(201).json({
-    message: "User registered successfully",
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-    },
-  });
 };
 
 /**
  * Login with access token only
  */
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password");
 
-  if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  if (!user.isActive) {
-    return res.status(403).json({
-      message: "Account is disabled. Contact admin.",
-    });
-  }
+    if (!user.isActive) {
+      return res.status(403).json({
+        message: "Account is disabled. Contact admin.",
+      });
+    }
 
-  const isMatch = await comparePassword(password, user.password);
-  if (!isMatch) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  const accessToken = generateAccessToken({
-    userId: user._id,
-    role: user.role,
-  });
-
-  res.cookie("accessToken", accessToken, {
-    ...cookieOptions,
-    maxAge: 15 * 60 * 1000,
-  });
-
-  res.status(200).json({
-    message: "Login successful",
-    accessToken,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
+    const accessToken = generateAccessToken({
+      userId: user._id,
       role: user.role,
-    },
-  });
+    });
+
+    res.cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+      accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Error in login:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 /**
  * Login with access and refresh tokens
  */
 export const loginWithRefresh = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password required" });
-  }
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" });
+    }
 
-  const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password");
 
-  if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  if (!user.isActive) {
-    return res.status(403).json({
-      message: "Account is disabled. Contact admin.",
-    });
-  }
+    if (!user.isActive) {
+      return res.status(403).json({
+        message: "Account is disabled. Contact admin.",
+      });
+    }
 
-  const isMatch = await comparePassword(password, user.password);
-  if (!isMatch) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  const payload = {
-    userId: user._id,
-    role: user.role,
-  };
-
-  const accessToken = generateAccessToken(payload);
-  const refreshToken = generateRefreshToken(payload);
-
-  res.cookie("accessToken", accessToken, {
-    ...cookieOptions,
-    maxAge: 15 * 60 * 1000,
-  });
-
-  res.cookie("refreshToken", refreshToken, {
-    ...cookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-
-  res.status(200).json({
-    message: "Login successful",
-    accessToken,
-    refreshToken,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
+    const payload = {
+      userId: user._id,
       role: user.role,
-    },
-  });
+    };
+
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    res.cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Error in loginWithRefresh:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 /**
  * Refresh access token
  */
 export const refreshAccessToken = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
-
-  if (!refreshToken) {
-    return res.status(401).json({ message: "Refresh token missing" });
-  }
-
   try {
-    const decoded = verifyRefreshToken(refreshToken);
+    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
-    const user = await User.findById(decoded.userId);
-
-    if (!user || !user.isActive) {
-      return res.status(403).json({
-        message: "Account is disabled. Contact admin.",
-      });
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Refresh token missing" });
     }
 
-    const newAccessToken = generateAccessToken({
-      userId: decoded.userId,
-      role: decoded.role,
-    });
+    try {
+      const decoded = verifyRefreshToken(refreshToken);
 
-    res.cookie("accessToken", newAccessToken, {
-      ...cookieOptions,
-      maxAge: 15 * 60 * 1000,
-    });
+      const user = await User.findById(decoded.userId);
 
-    res.status(200).json({ message: "Access token refreshed", newAccessToken });
+      if (!user || !user.isActive) {
+        return res.status(403).json({
+          message: "Account is disabled. Contact admin.",
+        });
+      }
+
+      const newAccessToken = generateAccessToken({
+        userId: decoded.userId,
+        role: decoded.role,
+      });
+
+      res.cookie("accessToken", newAccessToken, {
+        ...cookieOptions,
+        maxAge: 15 * 60 * 1000,
+      });
+
+      res
+        .status(200)
+        .json({ message: "Access token refreshed", newAccessToken });
+    } catch (error) {
+      res.status(401).json({ message: "Invalid or expired refresh token" });
+    }
   } catch (error) {
-    res.status(401).json({ message: "Invalid or expired refresh token" });
+    console.error("Error in refreshAccessToken:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
