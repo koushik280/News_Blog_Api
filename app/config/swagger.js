@@ -64,31 +64,35 @@ REST API for News Blog Application.
             },
             title: {
               type: "string",
-              example:
-                "Artificial Intelligence Is Transforming Modern Software Development",
+              example: "AI is transforming development",
             },
             slug: {
               type: "string",
-              example:
-                "artificial-intelligence-is-transforming-modern-software-development",
+              example: "ai-is-transforming-development",
             },
             content: {
               type: "string",
-              example:
-                "Artificial Intelligence is rapidly changing the way software applications are built.",
+              example: "Artificial Intelligence is changing software...",
             },
+
             category: {
-              type: "string",
-              enum: [
-                "sports",
-                "technology",
-                "business",
-                "politics",
-                "health",
-                "entertainment",
-              ],
-              example: "technology",
+              type: "object",
+              properties: {
+                _id: {
+                  type: "string",
+                  example: "65a9f2c3e8d9f10293ab4567",
+                },
+                name: {
+                  type: "string",
+                  example: "Technology",
+                },
+                slug: {
+                  type: "string",
+                  example: "technology",
+                },
+              },
             },
+
             image: {
               type: "object",
               properties: {
@@ -103,25 +107,64 @@ REST API for News Blog Application.
                 },
               },
             },
+
             author: {
               type: "string",
               example: "696d048f89d9a5586629c452",
             },
+
             isPublished: {
               type: "boolean",
               example: true,
             },
+
             publishedAt: {
               type: "string",
               example: "2026-01-21T16:26:32.283Z",
             },
+
             createdAt: {
               type: "string",
               example: "2026-01-21T16:26:32.286Z",
             },
+
             updatedAt: {
               type: "string",
               example: "2026-01-21T16:26:32.286Z",
+            },
+          },
+        },
+
+        Category: {
+          type: "object",
+          properties: {
+            _id: {
+              type: "string",
+              example: "65a9f2c3e8d9f10293ab4567",
+            },
+            name: {
+              type: "string",
+              example: "Technology",
+            },
+            slug: {
+              type: "string",
+              example: "technology",
+            },
+            description: {
+              type: "string",
+              example: "Tech related news",
+            },
+            isActive: {
+              type: "boolean",
+              example: true,
+            },
+            createdAt: {
+              type: "string",
+              example: "2026-01-01T10:00:00Z",
+            },
+            updatedAt: {
+              type: "string",
+              example: "2026-01-01T10:00:00Z",
             },
           },
         },
