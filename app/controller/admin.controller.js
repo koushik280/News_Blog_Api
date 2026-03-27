@@ -313,7 +313,9 @@ export const adminGetAllNews = async (req, res) => {
       query.isPublished = isPublished === "true";
     }
 
-    let newsQuery = News.find(query).sort({ createdAt: -1 });
+    let newsQuery = News.find(query)
+      .populate("category", "name slug")
+      .sort({ createdAt: -1 });
 
     let pagination = null;
 
@@ -378,4 +380,3 @@ export const togglePublishStatus = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-

@@ -11,20 +11,18 @@ const swaggerOptions = {
 REST API for News Blog Application.
 
 🔓 Public APIs:
-- Read news
-- Filter by category
-- Pagination (query-based & payload-based)
+- Read news with advanced filters
+- Search by keyword
+- Filter by category (slug or ID)
+- Date range filtering
+- Pagination & sorting
 
 🔐 Protected APIs:
-- Create / Update / Delete news (Editor, Admin)
-- User management (Admin only)
+- Create / Update / Delete news
+- Admin category & user management
 
 🔑 Authentication:
-- JWT-based authentication
-- Supports BOTH:
-  • HTTP-only cookies (browser-based apps)
-  • Authorization header (Bearer token)
-- Frontend using cookies must send requests with credentials: "include"
+- JWT (cookie + bearer supported)
       `,
     },
 

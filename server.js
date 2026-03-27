@@ -10,3 +10,4 @@ connectDb().then(() => {
     console.log(`Server is runnig port ${PORT}`);
   });
 });
+

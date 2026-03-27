@@ -15,44 +15,59 @@ const router = express.Router();
  * @swagger
  * /api/news:
  *   get:
- *     summary: Get news (all, single, category, pagination)
+ *     summary: Get news (filter, search, pagination, sorting, date range)
  *     description: |
- *       This single endpoint handles multiple use cases:
+ *       Fetch news articles with advanced filtering options.
  *
- *       🔹 Get all news
- *       🔹 Get single news by **id**
- *       🔹 Get single news by **slug**
- *       🔹 Filter news by **category**
- *       🔹 Optional pagination
+ *       🔓 Public API
  *
- *       📌 Examples:
- *       - All news: `/api/news`
- *       - Single by ID: `/api/news?id=NEWS_ID`
- *       - Single by slug: `/api/news?slug=news-slug`
- *       - Category only: `/api/news?category=sports`
- *       - Category + pagination: `/api/news?category=sports&page=1&limit=5`
- *       - Pagination only: `/api/news?page=1&limit=10`
+ *       Supports:
+ *       - Filter by category (slug or ObjectId)
+ *       - Search by keyword (title, content)
+ *       - Pagination
+ *       - Sorting
+ *       - Date range filtering
  *
  *     tags: [News]
+ *
  *     parameters:
- *       - in: query
- *         name: id
- *         schema:
- *           type: string
- *         description: MongoDB ObjectId (fetch single news)
- *
- *       - in: query
- *         name: slug
- *         schema:
- *           type: string
- *         description: SEO-friendly slug (fetch single news)
- *
  *       - in: query
  *         name: category
  *         schema:
  *           type: string
- *           enum: [sports, technology, business, politics, health]
- *         description: Filter news by category
+ *           example: technology
+ *         description: Category slug OR category ObjectId
+ *
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *           example: ai
+ *         description: Search keyword (title, content)
+ *
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [latest, oldest, title_asc, title_desc]
+ *           example: latest
+ *         description: Sorting option
+ *
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2026-01-01
+ *         description: Filter news published after this date
+ *
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2026-01-31
+ *         description: Filter news published before this date
  *
  *       - in: query
  *         name: page
@@ -71,68 +86,6 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: News fetched successfully
- *       404:
- *         description: News not found
- */
-
-router.get("/", getNews);
-
-/**
- * @swagger
- * /api/news/filter:
- *   post:
- *     summary: Get news using filters and pagination (payload-based)
- *     description: |
- *       Fetch news using request body filters.
- *       All fields are optional. Send only what you need.
- *
- *       ⚠️ Important:
- *       - `id` must be a valid MongoDB ObjectId
- *       - Do NOT send random strings like "string"
- *
- *       📌 Common use cases:
- *       - All news → `{ }`
- *       - Category only → `{ "category": "sports" }`
- *       - Pagination → `{ "page": 1, "limit": 5 }`
- *       - Category + pagination → `{ "category": "sports", "page": 1, "limit": 5 }`
- *
- *     tags: [News]
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               id:
- *                 type: string
- *                 example: 65a9f2c3e8d9f10293ab4567
- *                 description: MongoDB ObjectId (fetch single news)
- *
- *               slug:
- *                 type: string
- *                 example: india-clinches-historic-test-victory
- *                 description: SEO-friendly slug (fetch single news)
- *
- *               category:
- *                 type: string
- *                 enum: [sports, technology, business, politics, health]
- *                 example: sports
- *                 description: Filter news by category
- *
- *               page:
- *                 type: integer
- *                 example: 1
- *                 description: Page number (optional)
- *
- *               limit:
- *                 type: integer
- *                 example: 5
- *                 description: Number of results per page (optional)
- *
- *     responses:
- *       200:
- *         description: News fetched successfully
  *         content:
  *           application/json:
  *             schema:
@@ -144,26 +97,80 @@ router.get("/", getNews);
  *                     $ref: '#/components/schemas/News'
  *                 pagination:
  *                   type: object
- *                   nullable: true
  *                   properties:
  *                     page:
  *                       type: integer
- *                       example: 1
  *                     limit:
  *                       type: integer
- *                       example: 5
  *                     totalPages:
  *                       type: integer
- *                       example: 3
  *                     totalResults:
  *                       type: integer
- *                       example: 13
+ *
  *       400:
- *         description: Invalid request (e.g. invalid ObjectId)
+ *         description: Invalid query parameters (e.g., invalid date)
+ *
  *       404:
- *         description: News not found
+ *         description: Category not found (optional depending on implementation)
  */
 
+router.get("/", getNews);
+
+/**
+ * @swagger
+ * /api/news/filter:
+ *   post:
+ *     summary: Filter news using request body
+ *     description: |
+ *       Advanced filtering using JSON payload instead of query params.
+ *
+ *     tags: [News]
+ *
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               category:
+ *                 type: string
+ *                 example: technology
+ *                 description: Category slug OR ObjectId
+ *
+ *               search:
+ *                 type: string
+ *                 example: ai
+ *
+ *               sort:
+ *                 type: string
+ *                 enum: [latest, oldest, title_asc, title_desc]
+ *
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 example: 2026-01-01
+ *
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 example: 2026-01-31
+ *
+ *               page:
+ *                 type: integer
+ *                 example: 1
+ *
+ *               limit:
+ *                 type: integer
+ *                 example: 10
+ *
+ *     responses:
+ *       200:
+ *         description: Filtered news list
+ *
+ *       400:
+ *         description: Invalid input
+ */
 router.post("/filter", getNewsByBody);
 
 /* Protected */
