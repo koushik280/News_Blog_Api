@@ -26,7 +26,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/admin/category", categoryRoutes);
+app.use("/api/admin/categories", categoryRoutes);
 app.use("/api", publicRoutes);
 
 app.get("/", (req, res) => {
