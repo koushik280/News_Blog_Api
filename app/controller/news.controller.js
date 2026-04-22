@@ -312,12 +312,26 @@ export const createNews = async (req, res) => {
         message: "News with similar title already exists",
       });
     }
+
+    let categoryDoc = null;
+
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      categoryDoc = await Category.findById(category);
+    } else {
+      categoryDoc = await Category.findOne({
+        $or: [{ slug: category }, { name: category }],
+      });
+    }
+
     const categoryDoc = await Category.findById(category);
-    if (!categoryDoc || categoryDoc.isActive) {
+    if (!categoryDoc || !categoryDoc.isActive) {
       return res.status(400).json({
         message: "Invalid or inactive Category",
       });
     }
+
+     const publishStatus = isPublished === true || isPublished === "true";
+
 
     const news = await News.create({
       title,
@@ -325,8 +339,8 @@ export const createNews = async (req, res) => {
       content,
       category: categoryDoc._id,
       author: req.user.userId,
-      isPublished: Boolean(isPublished),
-      publishedAt: isPublished ? new Date() : null,
+      isPublished: publishStatus,
+      publishedAt: publishStatus ? new Date() : null,
     });
 
     //
