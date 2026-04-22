@@ -20,6 +20,8 @@ export const getNews = async (req, res) => {
       startDate,
       endDate,
     } = req.query;
+
+    // 🔥 FIX: validate dates early
     if (startDate && isNaN(new Date(startDate))) {
       return res.status(400).json({ message: "Invalid startDate" });
     }
@@ -28,7 +30,7 @@ export const getNews = async (req, res) => {
       return res.status(400).json({ message: "Invalid endDate" });
     }
 
-    // Base query: only published news
+    // Base query
     const query = { isPublished: true };
 
     // Single news by ID
@@ -41,73 +43,59 @@ export const getNews = async (req, res) => {
       query.slug = slug;
     }
 
-    // Category filter
+    // 🔥 FIX: Proper category handling (slug + ObjectId)
     if (category) {
       let categoryId = null;
-      query.category = category;
-      //case1:if it is an valid category id
+
       if (mongoose.Types.ObjectId.isValid(category)) {
         categoryId = category;
       } else {
-        //case2:Treat as slug
-        const categoryDoc = await Category.find({ slug: category });
+        const categoryDoc = await Category.findOne({ slug: category }); // 🔥 FIX: findOne instead of find
+
         if (!categoryDoc) {
           return res.status(200).json({
             data: [],
             message: "No news found for this category",
           });
         }
+
         categoryId = categoryDoc._id;
       }
 
-      query.category = categoryId;
+      query.category = categoryId; // 🔥 FIX: assign after resolving
     }
 
-    // Check if pagination is requested
-    const isPaginationRequested = page || limit;
-
+    // 🔥 FIX: search filter
     if (search) {
       query.$or = [
-        {
-          title: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          content: {
-            $regex: search,
-            $options: "i",
-          },
-        },
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
       ];
     }
 
-    let sortOption = { publishedAt: -1 }; // default = latest
+    // 🔥 FIX: sorting logic
+    let sortOption = { publishedAt: -1 };
 
     if (sort) {
       switch (sort) {
         case "latest":
           sortOption = { publishedAt: -1 };
           break;
-
         case "oldest":
           sortOption = { publishedAt: 1 };
           break;
-
         case "title_asc":
           sortOption = { title: 1 };
           break;
-
         case "title_desc":
           sortOption = { title: -1 };
           break;
-
         default:
           sortOption = { publishedAt: -1 };
       }
     }
 
+    // 🔥 FIX: date filter with proper end date handling
     if (startDate || endDate) {
       query.publishedAt = {};
 
@@ -116,16 +104,18 @@ export const getNews = async (req, res) => {
       }
 
       if (endDate) {
-        query.publishedAt.$lte = new Date(endDate);
+        const end = new Date(endDate); // 🔥 FIX: define end
         end.setHours(23, 59, 59, 999);
         query.publishedAt.$lte = end;
       }
     }
 
+    // 🔥 FIX: correct sort usage
     let newsQuery = News.find(query)
       .populate("category", "name slug")
-      .sort({ sortOption });
+      .sort(sortOption); // 🔥 FIX: remove { }
 
+    const isPaginationRequested = page || limit;
     let pagination = null;
 
     if (isPaginationRequested) {
@@ -147,16 +137,16 @@ export const getNews = async (req, res) => {
 
     const news = await newsQuery;
 
-    // If single news requested but not found
+    // 🔥 FIX: handle single news not found
     if ((id || slug) && news.length === 0) {
       return res.status(404).json({ message: "News not found" });
     }
 
-    // Final response
     res.status(200).json({
       data: news,
       ...(pagination && { pagination }),
     });
+
   } catch (error) {
     console.error("Error in getNews:", error);
     res.status(500).json({ message: "Internal server error" });
