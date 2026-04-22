@@ -313,7 +313,8 @@ export const createNews = async (req, res) => {
       });
     }
 
-    
+    // ✅ FIXED CATEGORY LOGIC
+    let categoryDoc = null;
 
     if (mongoose.Types.ObjectId.isValid(category)) {
       categoryDoc = await Category.findById(category);
@@ -323,15 +324,13 @@ export const createNews = async (req, res) => {
       });
     }
 
-    const categoryDoc = await Category.findById(category);
     if (!categoryDoc || !categoryDoc.isActive) {
       return res.status(400).json({
-        message: "Invalid or inactive Category",
+        message: "Invalid or inactive category",
       });
     }
 
-     const publishStatus = isPublished === true || isPublished === "true";
-
+    const publishStatus = isPublished === true || isPublished === "true";
 
     const news = await News.create({
       title,
@@ -343,7 +342,6 @@ export const createNews = async (req, res) => {
       publishedAt: publishStatus ? new Date() : null,
     });
 
-    //
     if (req.file) {
       news.image = {
         url: req.file.path,
@@ -356,6 +354,7 @@ export const createNews = async (req, res) => {
       message: "News created successfully",
       data: news,
     });
+
   } catch (error) {
     console.error("Error in createNews:", error);
     res.status(500).json({ message: "Internal server error" });
