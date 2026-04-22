@@ -313,7 +313,7 @@ export const createNews = async (req, res) => {
       });
     }
 
-    let categoryDoc = null;
+    
 
     if (mongoose.Types.ObjectId.isValid(category)) {
       categoryDoc = await Category.findById(category);
